@@ -7,6 +7,7 @@
   --accent: #2f5bd7;
   --radius: 12px;
   --max-width: 68rem;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   color-scheme: light;
 }
 
@@ -26,31 +27,36 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
   font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-size: 1rem;
-  line-height: 1.7;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3 {
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  font-weight: 650;
   margin: 0 0 0.5rem;
 }
 
 h1 {
-  font-size: clamp(1.9rem, 4.5vw, 2.75rem);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.2;
 }
 
 h2 {
-  font-size: 1.4rem;
-  margin-top: 3rem;
+  font-size: 1.35rem;
+  margin-top: 3.5rem;
 }
 
 p {
@@ -66,10 +72,20 @@ a:hover {
   text-decoration: underline;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .skip-link {
@@ -86,14 +102,21 @@ img {
   border-radius: var(--radius);
 }
 
+/* ---------- 页头 ---------- */
+
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(10px) saturate(1.4);
 }
 
 .site-header__inner {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 1.1rem 1.5rem;
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -107,54 +130,88 @@ img {
   font-size: 1.05rem;
 }
 
+.site-logo:hover {
+  text-decoration: none;
+}
+
 .site-nav {
   display: flex;
   gap: 1.4rem;
 }
 
 .site-nav a {
+  position: relative;
   color: var(--fg-muted);
   font-size: 0.95rem;
 }
 
+.site-nav a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.45rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease);
+}
+
+.site-nav a:hover,
 .site-nav a[aria-current='page'] {
   color: var(--fg);
+  text-decoration: none;
+}
+
+.site-nav a:hover::after,
+.site-nav a[aria-current='page']::after {
+  transform: scaleX(1);
 }
 
 main {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 3rem 1.5rem 5rem;
+  padding: 3.5rem 1.5rem 5.5rem;
 }
 
-.site-footer {
-  border-top: 1px solid var(--border);
+/* ---------- 首屏 ---------- */
+
+.hero {
+  position: relative;
+  max-width: 46rem;
+  padding-bottom: 1rem;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -6rem -8rem auto -4rem;
+  height: 20rem;
+  z-index: -1;
+  background:
+    radial-gradient(38% 46% at 22% 30%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
+    radial-gradient(34% 42% at 72% 18%, color-mix(in srgb, #d946a6 26%, transparent), transparent 70%);
+  filter: blur(28px);
+  animation: drift 18s var(--ease) infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4rem, 1.5rem, 0) scale(1.12);
+  }
+}
+
+.hero p {
   color: var(--fg-muted);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
-.site-footer__inner {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-  display: flex;
-  gap: 1rem 2rem;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-.muted {
-  color: var(--fg-muted);
-}
-
-.inline-links {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.1rem;
-  margin: 0;
-  padding: 0;
-}
+/* ---------- 列表与卡片 ---------- */
 
 .tag-list {
   list-style: none;
@@ -174,18 +231,138 @@ main {
   color: var(--fg-muted);
 }
 
-.hero {
-  max-width: 46rem;
+.inline-links {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0;
+  padding: 0;
 }
 
-.hero p {
+.muted {
   color: var(--fg-muted);
-  font-size: 1.05rem;
 }
 
 .project-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
   gap: 1.25rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
+}
+
+/* ---------- 入场 / 滚动动画 ---------- */
+
+/* 首屏元素：加载即依次浮现，动画结束后停在可见态 */
+.rise {
+  animation: rise 0.6s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 滚动进入视口时揭示。不支持 animation-timeline 的浏览器整段跳过，
+   元素保持默认可见，不会出现"内容永远不出现"的情况。
+   区间终点锚在 cover 而不是 entry：比视口高的元素永远走不完 entry，
+   会把内容卡在半透明 */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* 只用长写：Astro 的 CSS 压缩会把 animation 简写和 animation-timeline
+       合并成一条，Chrome 解析不了，整条声明被丢，reveal 元素直接不动画 */
+    .reveal {
+      animation-name: reveal;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 26px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}
+
+/* 阅读进度条，仅在支持 scroll() timeline 时启用；默认不渲染 */
+.progress-bar {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .progress-bar {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 2px;
+      z-index: 6;
+      background: var(--accent);
+      transform-origin: left;
+      animation-name: progress;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+    }
+
+    @keyframes progress {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+}
+
+/* ---------- 页脚 ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+}
+
+.site-footer__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  gap: 1rem 2rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* ---------- 动效降级 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

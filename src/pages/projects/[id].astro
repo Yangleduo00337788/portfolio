@@ -17,15 +17,17 @@ const { Content } = await render(project);
 ---
 
 <Base title={`${title} · 作品集`} description={summary}>
-  <article class="detail">
-    <a class="back" href="/#projects">← 返回作品列表</a>
+  <div class="progress-bar" aria-hidden="true"></div>
 
-    <h1>{title}</h1>
-    <p class="meta">
+  <article class="detail">
+    <a class="back rise" href="/#projects">← 返回作品列表</a>
+
+    <h1 class="rise" style="--i: 1">{title}</h1>
+    <p class="meta rise" style="--i: 2">
       {year}
       {role && ` · ${role}`}
     </p>
-    <p class="lead">{summary}</p>
+    <p class="lead rise" style="--i: 3">{summary}</p>
 
     {
       links?.demo && (
