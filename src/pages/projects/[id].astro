@@ -1,0 +1,169 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => !data.draft);
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+const { title, year, role, summary, tech, links } = project.data;
+const { Content } = await render(project);
+---
+
+<Base title={`${title} · 作品集`} description={summary}>
+  <article class="detail">
+    <a class="back" href="/#projects">← 返回作品列表</a>
+
+    <h1>{title}</h1>
+    <p class="meta">
+      {year}
+      {role && ` · ${role}`}
+    </p>
+    <p class="lead">{summary}</p>
+
+    {
+      links?.demo && (
+        <a class="action" href={links.demo} rel="noopener noreferrer" target="_blank">
+          在线体验
+        </a>
+      )
+    }
+    {
+      links?.repo && (
+        <a class="action action--ghost" href={links.repo} rel="noopener noreferrer" target="_blank">
+          源码
+        </a>
+      )
+    }
+
+    {
+      tech.length > 0 && (
+        <ul class="tag-list">
+          {tech.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .detail {
+    max-width: 46rem;
+  }
+
+  .back {
+    display: inline-block;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+  }
+
+  .meta {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .lead {
+    font-size: 1.1rem;
+    color: var(--fg-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .action {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .action:hover {
+    text-decoration: none;
+    filter: brightness(1.08);
+  }
+
+  .action--ghost {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border);
+    margin-left: 0.5rem;
+  }
+
+  .detail .tag-list {
+    margin: 1.5rem 0 0;
+  }
+
+  .prose {
+    margin-top: 2.5rem;
+  }
+
+  :global(.prose h2) {
+    font-size: 1.2rem;
+    margin: 2.25rem 0 0.75rem;
+  }
+
+  :global(.prose h3) {
+    font-size: 1.05rem;
+    margin: 1.75rem 0 0.5rem;
+  }
+
+  :global(.prose p),
+  :global(.prose li) {
+    color: var(--fg);
+  }
+
+  :global(.prose ul),
+  :global(.prose ol) {
+    padding-left: 1.25rem;
+  }
+
+  :global(.prose img) {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 1.5rem 0;
+  }
+
+  :global(.prose code) {
+    font-size: 0.88em;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.1em 0.35em;
+  }
+
+  /* 背景色交给 Shiki 的双主题，这里只负责外框 */
+  :global(.prose pre) {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  :global(.prose pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  :global(.prose blockquote) {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--border);
+    color: var(--fg-muted);
+  }
+</style>

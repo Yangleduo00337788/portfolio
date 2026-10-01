@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+import { site } from '../site.config';
+
+const projects = (
+  await getCollection('projects', ({ data }) => !data.draft)
+).sort(
+  (a, b) =>
+    b.data.year - a.data.year || a.data.title.localeCompare(b.data.title, 'zh'),
+);
+---
+
+<Base>
+  <section class="hero">
+    <h1>{site.author}</h1>
+    <p class="muted">
+      {site.role} — {site.tagline}
+    </p>
+  </section>
+
+  <section id="projects">
+    <h2>作品（{projects.length}）</h2>
+    {
+      projects.length > 0 ? (
+        <div class="project-grid">
+          {projects.map((project) => (
+            <ProjectCard project={project} />
+          ))}
+        </div>
+      ) : (
+        <p class="muted">
+          还没有作品。在 <code>src/content/projects/</code> 下新建一个
+          <code>.md</code> 文件即可。
+        </p>
+      )
+    }
+  </section>
+</Base>

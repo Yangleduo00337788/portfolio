@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config';
+---
+
+<Base title="关于 · 作品集" description={`${site.author}，${site.role}`}>
+  <article>
+    <h1>关于我</h1>
+    <p class="muted">
+      这段是占位文字。替换 <code>src/pages/about.astro</code> 里的内容，
+      身份信息在 <code>src/site.config.ts</code>。
+    </p>
+
+    <h2>我在做什么</h2>
+    <p>一句话说清你的方向，例如「专注于数据可视化和前端工程化」。</p>
+
+    <h2>技术栈</h2>
+    <ul class="tag-list">
+      {['TypeScript', 'React', 'Node.js', 'Python'].map((item) => <li>{item}</li>)}
+    </ul>
+
+    <h2>经历</h2>
+    <ul>
+      <li><span class="muted">20XX — 现在</span>　公司 / 岗位</li>
+      <li><span class="muted">20XX — 20XX</span>　学校 / 专业</li>
+    </ul>
+
+    <h2>联系我</h2>
+    <p>
+      <a href={`mailto:${site.email}`}>{site.email}</a>
+      {
+        site.links.map(
+          (link) => (
+            <span>
+              {' · '}
+              <a href={link.href} rel="noopener noreferrer" target="_blank">
+                {link.label}
+              </a>
+            </span>
+          )
+        )
+      }
+    </p>
+  </article>
+</Base>
