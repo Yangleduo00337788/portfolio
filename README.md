@@ -6,6 +6,7 @@ Astro 静态站，构建产物是纯 HTML/CSS，不需要服务器。部署看 [
 npm install
 npm run dev        # http://localhost:4321
 npm run build      # 产物在 dist/
+npm run check      # 构建 + 扫一遍产物里的断链
 npm run preview    # 本地预览 dist
 ```
 
@@ -26,6 +27,7 @@ src/
     ├── 404.astro
     └── robots.txt.ts
 public/images/                  截图放这里
+scripts/check-links.mjs         产物断链自检，npm run check 会调用
 ```
 
 ## 加一个作品
