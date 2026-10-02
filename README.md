@@ -14,7 +14,7 @@ npm run preview    # 本地预览 dist
 
 ```text
 src/
-├── site.config.ts              姓名 / 一句话介绍 / 邮箱 / 社交链接
+├── site.config.ts              姓名 / 介绍 / 邮箱 / 社交链接 / 技术栈 / 履历
 ├── content.config.ts           作品字段的校验规则
 ├── content/projects/*.md       ← 每个作品一个文件
 ├── layouts/Base.astro          页头、页脚、head 里的 meta

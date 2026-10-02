@@ -7,8 +7,8 @@ import { site } from '../site.config';
   <article>
     <h1>关于我</h1>
     <p class="muted">
-      这段是占位文字。替换 <code>src/pages/about.astro</code> 里的内容，
-      身份信息在 <code>src/site.config.ts</code>。
+      这段是占位文字，正文在本文件里改；姓名、社交链接、下面的技术栈和履历都来自
+      <code>src/site.config.ts</code>。
     </p>
 
     <h2>我在做什么</h2>
@@ -16,13 +16,18 @@ import { site } from '../site.config';
 
     <h2>技术栈</h2>
     <ul class="tag-list">
-      {['TypeScript', 'React', 'Node.js', 'Python'].map((item) => <li>{item}</li>)}
+      {site.stack.map((item) => <li>{item}</li>)}
     </ul>
 
     <h2>经历</h2>
     <ul>
-      <li><span class="muted">20XX — 现在</span>　公司 / 岗位</li>
-      <li><span class="muted">20XX — 20XX</span>　学校 / 专业</li>
+      {
+        site.experience.map((item) => (
+          <li>
+            <span class="muted">{item.period}</span>　{item.entry}
+          </li>
+        ))
+      }
     </ul>
 
     <h2>联系我</h2>

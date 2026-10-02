@@ -5,7 +5,7 @@
 ## 上线前先改这 4 处
 
 1. `astro.config.mjs` → `site` 换成你的正式地址（先不填也能部署，只影响 canonical/OG 绝对链接）
-2. `src/site.config.ts` → 姓名、一句话介绍、邮箱、社交链接
+2. `src/site.config.ts` → 姓名、一句话介绍、邮箱、社交链接、技术栈、履历
 3. `src/content/projects/` → 删掉 `01/02/03` 三个示例，换成你自己的 `.md`
 4. `public/images/` → 放截图，frontmatter 里写 `cover: /images/xxx.webp`
 
