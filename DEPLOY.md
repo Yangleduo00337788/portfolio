@@ -2,12 +2,13 @@
 
 免费额度：静态流量不计费、每月 500 次构建、赠送 `*.pages.dev` 二级域名、支持自有域名和 HTTPS。个人作品集用不完。
 
-## 上线前先改这 4 处
+## 上线前先改这 5 处
 
 1. `astro.config.mjs` → `site` 换成你的正式地址（先不填也能部署，只影响 canonical/OG 绝对链接）
 2. `src/site.config.ts` → 姓名、一句话介绍、邮箱、社交链接、技术栈、履历
 3. `src/content/projects/` → 删掉 `01/02/03` 三个示例，换成你自己的 `.md`
 4. `public/images/` → 放截图，frontmatter 里写 `cover: /images/xxx.webp`
+5. `public/images/og.png` → 分享缩略图（1200×630），链接发到聊天软件时显示的那张
 
 ## 方式 A：Git 自动部署（推荐）
 

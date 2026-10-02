@@ -12,11 +12,13 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props as { project: CollectionEntry<'projects'> };
-const { title, year, role, summary, tech, links } = project.data;
+const { title, year, role, summary, tech, links, cover } = project.data;
+/* 微信 / X / Facebook 不认 SVG 分享图，封面是 svg 时退回站点默认图 */
+const shareImage = cover && !/\.svg([?#]|$)/i.test(cover) ? cover : undefined;
 const { Content } = await render(project);
 ---
 
-<Base title={`${title} · 作品集`} description={summary}>
+<Base title={`${title} · 作品集`} description={summary} image={shareImage}>
   <div class="progress-bar" aria-hidden="true"></div>
 
   <article class="detail">

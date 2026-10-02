@@ -4,6 +4,8 @@ export const site = {
   role: '前端 / 全栈开发者',
   tagline: '把想法做成能用的东西。',
   email: 'you@example.com',
+  /** 分享缩略图，1200 x 630；作品详情页若填了 cover 会优先用封面 */
+  ogImage: '/images/og.png',
   links: [
     { label: 'GitHub', href: 'https://github.com/your-name' },
     { label: '博客', href: 'https://example.com' },

@@ -59,6 +59,10 @@ draft: false                    # true 则整页不构建
 
 `public/` 下的文件按原样输出，不做压缩。截图先转 WebP/AVIF 再放进来（单张控制在 200 KB 内），详情页和卡片引用同一张即可。
 
+## 分享缩略图
+
+`public/images/og.png`（1200×630）是链接发到微信、X、Telegram 时显示的那张图，现在是一张占位图，换成你自己的。作品详情页会把自己的 `cover` 当分享图，但社交平台不认 SVG——封面写成 `.svg` 时自动退回这张默认图，所以想让用户看到截图就当 `cover` 放 png/jpg。
+
 ## 想再往前走一步
 
 - 需要被搜索到再上 sitemap：`npx astro add sitemap`（会自动装 `@astrojs/sitemap` 并改配置），构建后生成 `sitemap-index.xml`，随后在 `src/pages/robots.txt.ts` 的响应文本里补一行 `Sitemap: ...`
