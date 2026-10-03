@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import EmailLink from '../components/EmailLink.astro';
 import { site } from '../site.config';
 ---
 
@@ -32,7 +33,7 @@ import { site } from '../site.config';
 
     <h2>联系我</h2>
     <p>
-      <a href={`mailto:${site.email}`}>{site.email}</a>
+      <EmailLink />
       {
         site.links.map(
           (link) => (

@@ -1,0 +1,21 @@
+---
+import { site } from '../site.config';
+
+/**
+ * 页面源码里不出现连续的邮箱地址：可见文字用数字实体，可点击的 mailto 由脚本拼。
+ * 挡的是拿正则扫 HTML 的爬虫，不挡真正的 HTML 解析器。
+ * 属性里的实体逃不过 Astro 的二次转义，所以这条路只能用在文本上。
+ */
+const [user, domain] = site.email.split('@');
+const display = [...site.email].map((c) => `&#${c.charCodeAt(0)};`).join('');
+---
+
+<a class="email-link" data-user={user} data-domain={domain} set:html={display}></a>
+
+<script>
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-user]')) {
+    if (!link.getAttribute('href')) {
+      link.href = `mailto:${link.dataset.user}@${link.dataset.domain}`;
+    }
+  }
+</script>

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { site } from '../site.config';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import EmailLink from '../components/EmailLink.astro';
 
 type Props = {
   title?: string;
@@ -89,7 +90,7 @@ const ogImage = new URL(image, Astro.site).href;
             © {new Date().getFullYear()} {site.author}
           </li>
           <li>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
+            <EmailLink />
           </li>
           {
             site.links.map((link) => (
