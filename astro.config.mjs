@@ -9,4 +9,8 @@ export default defineConfig({
       themes: { light: 'github-light', dark: 'github-dark' },
     },
   },
+  image: {
+    // 作品封面走 astro:assets，构建时转 WebP；SVG 例外，不参与转码
+    default: { format: 'webp' },
+  },
 });

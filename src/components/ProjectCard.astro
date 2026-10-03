@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 
 type Props = {
@@ -18,7 +19,14 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
   <div class="card__cover" style={`--hue: ${hue}`}>
     {
       cover ? (
-        <img src={cover} alt={`${title} 截图`} loading="lazy" decoding="async" />
+        /* 卡片最宽约 350px，出图按 2 倍给到 720px，多余的像素不落到访客机器上 */
+        <Image
+          src={cover}
+          alt={`${title} 截图`}
+          width={720}
+          loading="lazy"
+          decoding="async"
+        />
       ) : (
         <span class="card__initial" aria-hidden="true">
           {title.slice(0, 1)}

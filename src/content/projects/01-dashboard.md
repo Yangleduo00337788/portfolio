@@ -10,7 +10,7 @@ tech:
 links:
   demo: https://example.com
   repo: https://github.com/your-name/repo
-cover: /images/placeholder.svg
+cover: ../../assets/images/sample-cover.png
 ---
 
 ## 项目背景
@@ -30,6 +30,7 @@ chart.setOption({ series });
 
 ## 结果
 
-放链接、放数据、放反馈。截图放进 `public/images/` 后用相对根路径引用：
+放链接、放数据、放反馈。正文里的图仍从 `public/images/` 按根路径引用（原样输出，不压缩）；
+卡片封面写在 frontmatter 的 `cover` 里，走构建期压缩：
 
 ![占位图，替换成你的截图](/images/placeholder.svg)
