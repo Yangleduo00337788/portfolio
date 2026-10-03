@@ -59,6 +59,11 @@
   box-sizing: border-box;
 }
 
+/* 卡片自己声明了 display，会盖掉浏览器默认的 [hidden]；筛选要靠 hidden 生效 */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }

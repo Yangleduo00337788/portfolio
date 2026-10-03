@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import ProjectFilter from '../components/ProjectFilter.astro';
 import { getCollection } from 'astro:content';
 import { site } from '../site.config';
 import { publishedProjects } from '../lib/projects';
@@ -23,6 +24,7 @@ const projects = publishedProjects(await getCollection('projects'));
 
   <section id="projects">
     <h2>作品（{projects.length}）</h2>
+    {projects.length > 1 && <ProjectFilter projects={projects} />}
     {
       projects.length > 0 ? (
         <div class="project-grid">

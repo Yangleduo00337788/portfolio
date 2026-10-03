@@ -10,7 +10,11 @@ const { title, year, role, summary, tech, cover } = project.data;
 const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 ---
 
-<article class="card reveal">
+<article
+  class="card reveal"
+  data-tech={tech.join('|')}
+  data-search={`${title} ${summary} ${tech.join(' ')}`.toLowerCase()}
+>
   <div class="card__cover" style={`--hue: ${hue}`}>
     {
       cover ? (
