@@ -1,0 +1,20 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 和 DEPLOY.md 里 Cloudflare Pages 的 NODE_VERSION 保持一致
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # 构建 + 扫产物断链，忘了本地跑也不会把 404 推上线
+      - run: npm run check
