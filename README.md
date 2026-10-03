@@ -17,17 +17,25 @@ src/
 ├── site.config.ts              姓名 / 介绍 / 邮箱 / 社交链接 / 技术栈 / 履历
 ├── content.config.ts           作品字段的校验规则
 ├── content/projects/*.md       ← 每个作品一个文件
-├── layouts/Base.astro          页头、页脚、head 里的 meta
-├── components/ProjectCard.astro
-├── styles/global.css           设计变量（配色、圆角、宽度）都在这
+├── assets/images/              作品封面放这里（构建时压缩）
+├── lib/projects.ts             作品排序与相关推荐
+├── layouts/Base.astro          页头、页脚、head 里的 meta、主题初始化脚本
+├── components/
+│   ├── ProjectCard.astro       作品卡片
+│   ├── ProjectNav.astro        详情页的上下篇 + 同技术栈推荐
+│   ├── ProjectFilter.astro     首页标签筛选 / 关键词搜索
+│   ├── ThemeToggle.astro       深浅色切换按钮
+│   └── EmailLink.astro         页脚邮箱（源码里不出现连续地址）
+├── styles/global.css           设计变量（配色、圆角、宽度）与打印样式都在这
 └── pages/
-    ├── index.astro             首页 = 作品网格
+    ├── index.astro             首页 = 作品网格 + 筛选条
     ├── projects/[id].astro     作品详情页，按文件名自动生成路由
     ├── about.astro
     ├── 404.astro
     └── robots.txt.ts
-public/images/                  截图放这里
+public/images/                  正文里直接引用的图，原样输出不压缩
 scripts/check-links.mjs         产物断链自检，npm run check 会调用
+.github/workflows/check.yml     推送到 GitHub 时自动跑 npm run check
 ```
 
 ## 加一个作品
@@ -46,7 +54,7 @@ tech:
 links:
   demo: https://example.com     # 可选
   repo: https://github.com/... # 可选
-cover: /images/project.webp     # 可选，不填则卡片显示标题首字
+cover: ../../assets/images/project.webp # 可选，相对本 md 文件；不填则卡片显示标题首字
 draft: false                    # true 则整页不构建
 ---
 
@@ -57,7 +65,10 @@ draft: false                    # true 则整页不构建
 
 ## 图片
 
-`public/` 下的文件按原样输出，不做压缩。截图先转 WebP/AVIF 再放进来（单张控制在 200 KB 内），详情页和卡片引用同一张即可。
+分两条路，别混：
+
+- **卡片封面**（frontmatter 的 `cover`）放 `src/assets/images/`，路径相对当前 `.md` 文件写，例如 `../../assets/images/dashboard.png`。构建时 Astro 会缩放成 720px 宽并转 WebP，原图直接丢进去就行，不用手动压。SVG 是例外：能引用但不转码。
+- **正文里的图**（Markdown 中的 `![](/images/x.png)`）仍从 `public/images/` 按根路径引用，原样输出、不做压缩，这种还得自己控制在 200 KB 内。
 
 ## 分享缩略图
 
@@ -67,4 +78,5 @@ draft: false                    # true 则整页不构建
 
 - 需要被搜索到再上 sitemap：`npx astro add sitemap`（会自动装 `@astrojs/sitemap` 并改配置），构建后生成 `sitemap-index.xml`，随后在 `src/pages/robots.txt.ts` 的响应文本里补一行 `Sitemap: ...`
 - 把作品从 Markdown 换成 `.mdx`，可在正文里嵌交互组件
-- 深色模式已跟随系统（`prefers-color-scheme`），要手动切换按钮的话改 `global.css` 的变量作用域
+- 主题切换只有亮/暗两态，选择记在 `localStorage`；点过一次之后就不再跟随系统翻转，想要「跟随系统」第三态的话得自己在 `ThemeToggle.astro` 里加一档
+- 首页筛选是纯前端过滤，作品几十个以内够用；再多就该拆 `/projects` 独立页分页

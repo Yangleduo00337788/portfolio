@@ -7,7 +7,7 @@
 1. `astro.config.mjs` → `site` 换成你的正式地址（先不填也能部署，只影响 canonical/OG 绝对链接）
 2. `src/site.config.ts` → 姓名、一句话介绍、邮箱、社交链接、技术栈、履历
 3. `src/content/projects/` → 删掉 `01/02/03` 三个示例，换成你自己的 `.md`
-4. `public/images/` → 放截图，frontmatter 里写 `cover: /images/xxx.webp`
+4. `src/assets/images/` → 放作品封面，frontmatter 里按相对路径写 `cover: ../../assets/images/xxx.png`（构建时自动压缩）
 5. `public/images/og.png` → 分享缩略图（1200×630），链接发到聊天软件时显示的那张
 
 ## 方式 A：Git 自动部署（推荐）
