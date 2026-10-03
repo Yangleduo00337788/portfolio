@@ -3,13 +3,9 @@ import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { getCollection } from 'astro:content';
 import { site } from '../site.config';
+import { publishedProjects } from '../lib/projects';
 
-const projects = (
-  await getCollection('projects', ({ data }) => !data.draft)
-).sort(
-  (a, b) =>
-    b.data.year - a.data.year || a.data.title.localeCompare(b.data.title, 'zh'),
-);
+const projects = publishedProjects(await getCollection('projects'));
 ---
 
 <Base>

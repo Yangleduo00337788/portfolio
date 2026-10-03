@@ -1,0 +1,114 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+type Project = CollectionEntry<'projects'>;
+
+type Props = {
+  prev?: Project;
+  next?: Project;
+  related?: Project[];
+};
+
+const { prev, next, related = [] } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="pager" aria-label="作品间导航">
+      {
+        prev && (
+          <a class="pager__link" rel="prev" href={`/projects/${prev.id}`}>
+            <span class="pager__label">← 上一篇</span>
+            <span class="pager__title">{prev.data.title}</span>
+          </a>
+        )
+      }
+      {
+        next && (
+          <a class="pager__link pager__link--next" rel="next" href={`/projects/${next.id}`}>
+            <span class="pager__label">下一篇 →</span>
+            <span class="pager__title">{next.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  )
+}
+
+{
+  related.length > 0 && (
+    <section class="related">
+      <h2>用过相同技术栈的作品</h2>
+      <ul class="related__list">
+        {related.map((item) => (
+          <li>
+            <a href={`/projects/${item.id}`}>{item.data.title}</a>
+            <span class="muted">
+              {item.data.year} · {item.data.tech.join(' / ')}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .pager {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--fg);
+    transition: border-color 0.25s var(--ease);
+  }
+
+  .pager__link:hover {
+    text-decoration: none;
+    border-color: var(--accent);
+  }
+
+  .pager__link--next {
+    text-align: right;
+  }
+
+  .pager__label {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+  }
+
+  .pager__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .related {
+    margin-top: 2.5rem;
+  }
+
+  .related h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .related__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+  }
+</style>

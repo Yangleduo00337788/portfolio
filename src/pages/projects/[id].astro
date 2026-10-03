@@ -1,17 +1,29 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ProjectNav from '../../components/ProjectNav.astro';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { publishedProjects, relatedProjects } from '../../lib/projects';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects', ({ data }) => !data.draft);
-  return projects.map((project) => ({
+  const projects = publishedProjects(await getCollection('projects'));
+  return projects.map((project, i) => ({
     params: { id: project.id },
-    props: { project },
+    props: {
+      project,
+      prev: projects[i - 1],
+      next: projects[i + 1],
+      related: relatedProjects(project, projects),
+    },
   }));
 }
 
-const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+const { project, prev, next, related } = Astro.props as {
+  project: CollectionEntry<'projects'>;
+  prev?: CollectionEntry<'projects'>;
+  next?: CollectionEntry<'projects'>;
+  related: CollectionEntry<'projects'>[];
+};
 const { title, year, role, summary, tech, links, cover } = project.data;
 /* 微信 / X / Facebook 不认 SVG 分享图，封面是 svg 时退回站点默认图 */
 const shareImage = cover && !/\.svg([?#]|$)/i.test(cover) ? cover : undefined;
@@ -59,6 +71,8 @@ const { Content } = await render(project);
     <div class="prose">
       <Content />
     </div>
+
+    <ProjectNav prev={prev} next={next} related={related} />
   </article>
 </Base>
 
