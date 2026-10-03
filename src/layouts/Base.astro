@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { site } from '../site.config';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 type Props = {
   title?: string;
@@ -26,6 +27,21 @@ const ogImage = new URL(image, Astro.site).href;
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <!-- 首帧前定好主题，避免先亮后暗的闪一下 -->
+    <script is:inline>
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem('theme');
+        } catch {}
+        document.documentElement.dataset.theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+      })();
+    </script>
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -58,6 +74,7 @@ const ogImage = new URL(image, Astro.site).href;
             ))
           }
         </nav>
+        <ThemeToggle />
       </div>
     </header>
 

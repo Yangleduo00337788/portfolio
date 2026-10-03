@@ -11,9 +11,9 @@
   color-scheme: light;
 }
 
-/* 系统深色偏好 */
+/* 系统深色兜底：只在脚本没来得及写 data-theme 时生效（无 JS 访客） */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: #0e1013;
     --bg-elevated: #171a1f;
     --fg: #e8eaee;
@@ -23,11 +23,36 @@
     color-scheme: dark;
   }
 
-  .astro-code,
-  .astro-code span {
+  /* astro.config 里配了 shikiConfig.themes 之后，Astro 只把深色值写成
+     --shiki-dark / --shiki-dark-bg 挂在 <pre> 上，消费它们的 CSS 要自己补，
+     否则深色页面里代码块仍然是浅色背景 */
+  :root:not([data-theme]) .astro-code,
+  :root:not([data-theme]) .astro-code span {
     color: var(--shiki-dark) !important;
     background-color: var(--shiki-dark-bg) !important;
   }
+}
+
+/* 手动选择的主题比系统偏好更具体，媒体查询里那几条会被这里盖掉，
+   所以深色值要再写一遍，亮色只需把 color-scheme 掰回来 */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0e1013;
+  --bg-elevated: #171a1f;
+  --fg: #e8eaee;
+  --fg-muted: #98a0ad;
+  --border: #262a31;
+  --accent: #7ea2ff;
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
 }
 
 * {
