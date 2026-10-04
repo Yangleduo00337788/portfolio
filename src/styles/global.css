@@ -404,6 +404,83 @@ main {
   }
 }
 
+/* ---------- 详情页正文增强（脚本注入的元素拿不到 scoped 属性） ---------- */
+
+.code-block {
+  position: relative;
+}
+
+.code-copy {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+/* 触屏没有 hover，按钮一直显示；有鼠标的设备才藏起来，不压着代码 */
+@media (hover: hover) {
+  .code-copy {
+    opacity: 0;
+    transition: opacity 0.2s var(--ease), color 0.2s var(--ease),
+      border-color 0.2s var(--ease);
+  }
+
+  .code-block:hover .code-copy,
+  .code-copy:focus-visible {
+    opacity: 1;
+  }
+}
+
+.is-zoomable {
+  cursor: zoom-in;
+}
+
+body.has-lightbox {
+  overflow: hidden;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgb(0 0 0 / 0.82);
+  cursor: zoom-out;
+}
+
+.lightbox img {
+  max-width: min(92vw, 1400px);
+  max-height: 82vh;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.6);
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 /* ---------- 打印 ---------- */
 
 @media print {
@@ -427,6 +504,9 @@ main {
   .theme-toggle,
   .filter-bar,
   .hero::before,
+  .code-copy,
+  .lightbox,
+  .print-trigger,
   .back {
     display: none !important;
   }

@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ProjectNav from '../../components/ProjectNav.astro';
+import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import { visibleProjects, relatedProjects } from '../../lib/projects';
@@ -44,7 +45,17 @@ const { Content } = await render(project);
       {year}
       {role && ` · ${role}`}
     </p>
-    <p class="lead rise" style="--i: 3">{summary}</p>
+
+    {
+      /* 详情版式最宽 46rem（约 736px），出图给到 1000px 足够覆盖高清屏 */
+      cover && (
+        <figure class="detail__cover rise" style="--i: 3">
+          <Image src={cover} alt={`${title} 截图`} width={1000} decoding="async" />
+        </figure>
+      )
+    }
+
+    <p class="lead rise" style="--i: 4">{summary}</p>
 
     {
       links?.demo && (
@@ -93,6 +104,16 @@ const { Content } = await render(project);
     border-radius: 999px;
     background: #d946a6;
     color: #fff;
+  }
+
+  .detail__cover {
+    margin: 0 0 1.75rem;
+  }
+
+  .detail__cover img {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
 
   .back {
@@ -199,3 +220,85 @@ const { Content } = await render(project);
     color: var(--fg-muted);
   }
 </style>
+
+<script>
+  /**
+   * 复制按钮和大图遮罩都是这里运行时注入的 DOM，拿不到 Astro 的 scoped 属性，
+   * 所以它们的样式在 global.css 的「正文增强」一节里，打印时也在那边隐藏。
+   */
+  const prose = document.querySelector<HTMLElement>('.prose');
+
+  if (prose) {
+    if (navigator.clipboard) {
+      for (const block of prose.querySelectorAll('pre')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'code-block';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'code-copy';
+        button.textContent = '复制';
+        button.addEventListener('click', async () => {
+          const code = block.querySelector('code') ?? block;
+          try {
+            await navigator.clipboard.writeText(code.textContent ?? '');
+            button.textContent = '已复制';
+          } catch {
+            button.textContent = '复制失败';
+          }
+          setTimeout(() => (button.textContent = '复制'), 1600);
+        });
+        block.replaceWith(wrap);
+        wrap.append(block, button);
+      }
+    }
+
+    const images = [...prose.querySelectorAll<HTMLImageElement>('img')];
+    if (images.length > 0) {
+      const overlay = document.createElement('div');
+      overlay.className = 'lightbox';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', '查看图片大图');
+      overlay.hidden = true;
+      const big = document.createElement('img');
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'lightbox__close';
+      close.textContent = '关闭（Esc）';
+      overlay.append(big, close);
+      document.body.append(overlay);
+
+      let opener: HTMLImageElement | null = null;
+      const show = (target: HTMLImageElement) => {
+        big.src = target.currentSrc || target.src;
+        big.alt = target.alt;
+        opener = target;
+        overlay.hidden = false;
+        document.body.classList.add('has-lightbox');
+        close.focus();
+      };
+      const hide = () => {
+        overlay.hidden = true;
+        document.body.classList.remove('has-lightbox');
+        opener?.focus();
+      };
+
+      for (const image of images) {
+        image.classList.add('is-zoomable');
+        image.tabIndex = 0;
+        image.addEventListener('click', () => show(image));
+        image.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            show(image);
+          }
+        });
+      }
+
+      overlay.addEventListener('click', hide);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !overlay.hidden) hide();
+      });
+    }
+  }
+</script>
