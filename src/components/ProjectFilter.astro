@@ -154,19 +154,54 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
         : '没有匹配的作品，换个关键词试试';
     };
 
+    const sync = () => {
+      const params = new URLSearchParams();
+      if (activeTag) params.set('tag', activeTag);
+      const q = input.value.trim();
+      if (q) params.set('q', q);
+      const search = params.toString();
+      /* 用 replace 不用 push：每敲一个字压一条历史，后退键就成了翻筛选记录。
+         hash 固定带 #projects，复制这条地址发给别人，打开直接落在作品区 */
+      history.replaceState(
+        history.state,
+        '',
+        `${location.pathname}${search ? `?${search}` : ''}#projects`,
+      );
+    };
+
+    const press = (chip: HTMLButtonElement | undefined) => {
+      activeTag = chip?.dataset.tag ?? '';
+      for (const other of chips) {
+        other.setAttribute('aria-pressed', String(other === chip));
+      }
+    };
+
+    /** 从地址栏还原筛选，认不出的 tag 退回「全部」，免得分享链接一打开是空的 */
+    const restore = () => {
+      const params = new URLSearchParams(location.search);
+      const wanted = chips.find((chip) => chip.dataset.tag === params.get('tag'));
+      press(wanted ?? chips.find((chip) => chip.dataset.tag === ''));
+      input.value = params.get('q') ?? '';
+      apply();
+    };
+
     for (const chip of chips) {
       chip.addEventListener('click', () => {
-        activeTag = chip.dataset.tag ?? '';
-        for (const other of chips) {
-          const on = other === chip;
-          other.setAttribute('aria-pressed', String(on));
-        }
+        press(chip);
         apply();
+        sync();
       });
     }
 
-    input.addEventListener('input', apply);
+    input.addEventListener('input', () => {
+      apply();
+      sync();
+    });
+
+    window.addEventListener('popstate', restore);
+
     /* 筛选依赖 JS，没 JS 时这条整块保持隐藏，作品照常全部显示 */
+    restore();
     bar.hidden = false;
   }
 </script>
