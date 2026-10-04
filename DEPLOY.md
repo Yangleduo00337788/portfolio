@@ -45,7 +45,7 @@ Workers & Pages → Create → Pages → **Upload assets**，把本地 `dist` �
 
 ## 验证是否生效
 
-推之前先本地跑一次 `npm run check`，它会构建并扫一遍 `dist/`，报告 href/src 里指向不存在文件的链接（图片忘了放、路径打错都会被抓出来）。
+推之前先本地跑一次 `npm run check`，它会先做类型检查（`astro check`），再构建，再扫一遍 `dist/`，报告 href/src 里指向不存在文件的链接（图片忘了放、字段名打错、路径写错都会被抓出来）。推给 GitHub 时 `.github/workflows/check.yml` 会自动跑同一条命令。
 
 ```bash
 curl -sI https://你的项目.pages.dev/

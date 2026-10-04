@@ -6,7 +6,7 @@ Astro 静态站，构建产物是纯 HTML/CSS，不需要服务器。部署看 [
 npm install
 npm run dev        # http://localhost:4321
 npm run build      # 产物在 dist/
-npm run check      # 构建 + 扫一遍产物里的断链
+npm run check      # 类型检查 + 构建 + 扫一遍产物里的断链
 npm run preview    # 本地预览 dist
 ```
 
@@ -18,7 +18,7 @@ src/
 ├── content.config.ts           作品字段的校验规则
 ├── content/projects/*.md       ← 每个作品一个文件
 ├── assets/images/              作品封面放这里（构建时压缩）
-├── lib/projects.ts             作品排序与相关推荐
+├── lib/projects.ts             作品列表开关（dev 含草稿）、排序与相关推荐
 ├── layouts/Base.astro          页头、页脚、head 里的 meta、主题初始化脚本
 ├── components/
 │   ├── ProjectCard.astro       作品卡片
@@ -31,6 +31,7 @@ src/
     ├── index.astro             首页 = 作品网格 + 筛选条
     ├── projects/[id].astro     作品详情页，按文件名自动生成路由
     ├── about.astro
+    ├── resume.astro            简历页，把 site.config + 作品列表拼成可打印的一页
     ├── 404.astro
     └── robots.txt.ts
 public/images/                  正文里直接引用的图，原样输出不压缩
@@ -54,8 +55,8 @@ tech:
 links:
   demo: https://example.com     # 可选
   repo: https://github.com/... # 可选
-cover: ../../assets/images/project.webp # 可选，相对本 md 文件；不填则卡片显示标题首字
-draft: false                    # true 则整页不构建
+cover: ../../assets/images/project.webp # 可选，相对本 md 文件；卡片和详情页顶部都用它
+draft: false                    # true 则不构建上线；本地 dev 仍能预览，带「草稿」标记
 ---
 
 正文用 Markdown 写：背景、你做了什么、结果。
@@ -67,8 +68,23 @@ draft: false                    # true 则整页不构建
 
 分两条路，别混：
 
-- **卡片封面**（frontmatter 的 `cover`）放 `src/assets/images/`，路径相对当前 `.md` 文件写，例如 `../../assets/images/dashboard.png`。构建时 Astro 会缩放成 720px 宽并转 WebP，原图直接丢进去就行，不用手动压。SVG 是例外：能引用但不转码。
+- **卡片封面**（frontmatter 的 `cover`）放 `src/assets/images/`，路径相对当前 `.md` 文件写，例如 `../../assets/images/dashboard.png`。列表卡片按 720px 宽出图，详情页顶部用同一张图按 1000px 出图，构建时缩放并转 WebP（`Image` 组件默认就转 WebP，`astro.config.mjs` 里不需要配）。原图直接丢进去就行，不用手动压。SVG 是例外：能引用但不转码。
 - **正文里的图**（Markdown 中的 `![](/images/x.png)`）仍从 `public/images/` 按根路径引用，原样输出、不做压缩，这种还得自己控制在 200 KB 内。
+
+## 筛选与分享
+
+标签和搜索词会同步到地址栏（`/?tag=Vue+3&q=关键词`），复制这条地址发给别人，对方打开就是筛好的列表，刷新也不会丢。地址里的 tag 认不出来时自动退回「全部」，只按关键词筛。没开 JavaScript 的话筛选条整块隐藏，作品照常全部显示。
+
+## 详情页的小东西
+
+- 封面图显示在标题下方，和卡片用的是同一张 frontmatter `cover`，各自按自己的尺寸出压缩图
+- 代码块右上角有「复制」：鼠标移进代码块才出现，触屏一直显示
+- 正文里的图片可以点开看大图，点任意位置或按 Esc 关闭；Tab 聚焦到图片后回车也能打开
+- `draft: true` 的作品只在 `npm run dev` 里出现，卡片和详情页会标「草稿」，`npm run build` 不生成这一页
+
+## 简历
+
+`/resume` 把 `src/site.config.ts` 里的联系方式、技术栈、履历和作品列表拼成一页，右上角有「打印 / 存成 PDF」按钮。打印样式会把页头页脚、主题按钮、筛选条、复制按钮和大图遮罩都去掉，只留正文和链接地址，所以不用另外维护一份 PDF。
 
 ## 分享缩略图
 
