@@ -7,8 +7,12 @@ export function byYearDesc(a: Project, b: Project): number {
   return b.data.year - a.data.year || a.data.title.localeCompare(b.data.title, 'zh');
 }
 
-export function publishedProjects(projects: Project[]): Project[] {
-  return projects.filter((p) => !p.data.draft).sort(byYearDesc);
+/**
+ * 首页网格、详情页的"上一篇/下一篇"和推荐必须用同一份列表，否则两边顺序对不上。
+ * includeDrafts 只在 dev 传 true，方便草稿看排版；构建产物始终不含草稿。
+ */
+export function visibleProjects(projects: Project[], includeDrafts = false): Project[] {
+  return projects.filter((p) => includeDrafts || !p.data.draft).sort(byYearDesc);
 }
 
 /** 共享技术栈越多排越前，一个都不重合就不推荐 */

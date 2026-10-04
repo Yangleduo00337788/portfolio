@@ -4,9 +4,9 @@ import ProjectCard from '../components/ProjectCard.astro';
 import ProjectFilter from '../components/ProjectFilter.astro';
 import { getCollection } from 'astro:content';
 import { site } from '../site.config';
-import { publishedProjects } from '../lib/projects';
+import { visibleProjects } from '../lib/projects';
 
-const projects = publishedProjects(await getCollection('projects'));
+const projects = visibleProjects(await getCollection('projects'), import.meta.env.DEV);
 ---
 
 <Base>

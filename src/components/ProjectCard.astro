@@ -7,7 +7,7 @@ type Props = {
 };
 
 const { project } = Astro.props;
-const { title, year, role, summary, tech, cover } = project.data;
+const { title, year, role, summary, tech, cover, draft } = project.data;
 const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 ---
 
@@ -16,6 +16,7 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
   data-tech={tech.join('|')}
   data-search={`${title} ${summary} ${tech.join(' ')}`.toLowerCase()}
 >
+  {draft && <span class="card__draft">草稿</span>}
   <div class="card__cover" style={`--hue: ${hue}`}>
     {
       cover ? (
@@ -72,6 +73,20 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
   .card:hover {
     border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
     box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.35);
+  }
+
+  /* draft: true 只在 dev 的列表里出现，构建产物不会有它，所以样式也不用管上线后 */
+  .card__draft {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    z-index: 2;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
+    line-height: 1;
+    border-radius: 999px;
+    background: #d946a6;
+    color: #fff;
   }
 
   .card:hover .card__title a {
