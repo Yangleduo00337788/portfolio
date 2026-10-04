@@ -1,0 +1,195 @@
+---
+import Base from '../layouts/Base.astro';
+import EmailLink from '../components/EmailLink.astro';
+import { getCollection } from 'astro:content';
+import { site } from '../site.config';
+import { visibleProjects } from '../lib/projects';
+
+const projects = visibleProjects(await getCollection('projects'), import.meta.env.DEV);
+---
+
+<Base
+  title="简历 · 作品集"
+  description={`${site.author}，${site.role}：${site.tagline}`}
+>
+  <article class="resume">
+    <div class="resume__head">
+      <div>
+        <h1 class="rise">{site.author}</h1>
+        <p class="rise" style="--i: 1">
+          {site.role} · {site.tagline}
+        </p>
+        <p class="resume__contacts rise" style="--i: 2">
+          <EmailLink />
+          {
+            site.links.map(
+              (link) => (
+                <span>
+                  {' · '}
+                  <a href={link.href} rel="noopener noreferrer" target="_blank">
+                    {link.label}
+                  </a>
+                </span>
+              )
+            )
+          }
+        </p>
+      </div>
+      <button class="print-trigger" type="button">打印 / 存成 PDF</button>
+    </div>
+
+    <h2>技术栈</h2>
+    <ul class="tag-list">
+      {site.stack.map((item) => <li>{item}</li>)}
+    </ul>
+
+    <h2>经历</h2>
+    <ul class="resume__experience">
+      {
+        site.experience.map(
+          (item) => (
+            <li>
+              <span class="muted">{item.period}</span>　{item.entry}
+            </li>
+          )
+        )
+      }
+    </ul>
+
+    <h2>作品（{projects.length}）</h2>
+    {
+      projects.length > 0 ? (
+        <ul class="resume__projects">
+          {projects.map((project) => (
+            <li class="resume__item">
+              <h3>
+                <a href={`/projects/${project.id}`}>{project.data.title}</a>
+                <span class="muted">
+                  {project.data.year}
+                  {project.data.role && ` · ${project.data.role}`}
+                </span>
+              </h3>
+              <p>{project.data.summary}</p>
+              {project.data.tech.length > 0 && (
+                <p class="muted">{project.data.tech.join(' / ')}</p>
+              )}
+              {
+                project.data.links && (
+                  <p class="resume__links">
+                    {project.data.links.demo && (
+                      <a href={project.data.links.demo} rel="noopener noreferrer" target="_blank">
+                        在线体验
+                      </a>
+                    )}
+                    {project.data.links.repo && (
+                      <a href={project.data.links.repo} rel="noopener noreferrer" target="_blank">
+                        源码
+                      </a>
+                    )}
+                  </p>
+                )
+              }
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">
+          还没有公开的作品，先在 <code>src/content/projects/</code> 里建一个
+          <code>.md</code>。
+        </p>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .resume {
+    max-width: 46rem;
+  }
+
+  .resume__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .resume__head p {
+    color: var(--fg-muted);
+    margin: 0 0 0.6rem;
+  }
+
+  .resume__contacts {
+    font-size: 0.92rem;
+  }
+
+  .print-trigger {
+    padding: 0.45rem 0.9rem;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease);
+  }
+
+  .print-trigger:hover {
+    border-color: var(--accent);
+  }
+
+  .resume__experience {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .resume__projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  .resume__item h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 1rem;
+    margin: 0 0 0.25rem;
+  }
+
+  .resume__item p {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  .resume__links {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+  }
+
+  /* 简历是要给人存成 PDF 的，一条作品被腰斩在两页最难看 */
+  @media print {
+    .resume__item {
+      break-inside: avoid;
+    }
+
+    .resume__projects {
+      gap: 0.7rem;
+    }
+  }
+</style>
+
+<script>
+  document.querySelector<HTMLButtonElement>('.print-trigger')?.addEventListener('click', () => {
+    window.print();
+  });
+</script>

@@ -19,6 +19,7 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const nav = [
   { label: '作品', href: '/' },
   { label: '关于', href: '/about' },
+  { label: '简历', href: '/resume' },
 ];
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site).href;
