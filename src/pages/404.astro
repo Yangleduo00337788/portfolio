@@ -3,7 +3,54 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="页面不存在 · 作品集">
-  <h1>404</h1>
-  <p class="muted">这个地址下没有页面。</p>
-  <a href="/">← 回到首页</a>
+  <div class="missing">
+    <h1>404</h1>
+    <p class="muted rise" style="--i: 1">这个地址下没有页面。</p>
+    <a class="home rise" style="--i: 2" href="/">← 回到首页</a>
+  </div>
 </Base>
+
+<style>
+  h1 {
+    width: fit-content;
+    font-size: clamp(4.5rem, 20vw, 9rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    background: linear-gradient(
+      100deg,
+      var(--accent),
+      #d946a6,
+      var(--accent)
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: mask-rise 0.75s var(--ease) both, hue-slide 9s linear infinite;
+  }
+
+  @keyframes hue-slide {
+    to {
+      background-position: 220% 0;
+    }
+  }
+
+  .home {
+    display: inline-block;
+    margin-top: 0.5rem;
+    transition: translate 0.2s var(--ease);
+  }
+
+  .home:hover {
+    text-decoration: none;
+    translate: -3px 0;
+  }
+
+  @media print {
+    /* 裁切文本的背景在纸上会整个糊掉，退回实色 */
+    h1 {
+      background: none;
+      color: #000;
+    }
+  }
+</style>

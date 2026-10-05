@@ -108,12 +108,37 @@ const { Content } = await render(project);
 
   .detail__cover {
     margin: 0 0 1.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
   }
 
   .detail__cover img {
     width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+  }
+
+  /* 滚进视口时从略大收紧到原尺寸，像照片落定。裁剪靠外层的 overflow: hidden，
+     所以过程中只会轻微吃掉边上的像素，到位后就是 1:1 */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .detail__cover img {
+        animation-name: cover-settle;
+        animation-duration: auto;
+        animation-timing-function: var(--ease);
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 40%;
+      }
+
+      @keyframes cover-settle {
+        from {
+          scale: 1.06;
+        }
+        to {
+          scale: 1;
+        }
+      }
+    }
   }
 
   .back {
@@ -121,6 +146,13 @@ const { Content } = await render(project);
     margin-bottom: 2rem;
     font-size: 0.9rem;
     color: var(--fg-muted);
+    transition: translate 0.2s var(--ease), color 0.2s var(--ease);
+  }
+
+  .back:hover {
+    color: var(--fg);
+    text-decoration: none;
+    translate: -3px 0;
   }
 
   .meta {
@@ -142,11 +174,21 @@ const { Content } = await render(project);
     font-size: 0.9rem;
     background: var(--accent);
     color: #fff;
+    transition: translate 0.2s var(--ease), box-shadow 0.25s var(--ease),
+      filter 0.2s var(--ease), border-color 0.2s var(--ease),
+      scale 0.12s var(--ease);
   }
 
   .action:hover {
     text-decoration: none;
     filter: brightness(1.08);
+    translate: 0 -1px;
+    box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 75%, transparent);
+  }
+
+  .action:active {
+    scale: 0.97;
+    translate: 0 0;
   }
 
   .action--ghost {
@@ -154,6 +196,12 @@ const { Content } = await render(project);
     color: var(--fg);
     border: 1px solid var(--border);
     margin-left: 0.5rem;
+  }
+
+  .action--ghost:hover {
+    filter: none;
+    border-color: var(--accent);
+    box-shadow: none;
   }
 
   .detail .tag-list {
@@ -225,10 +273,26 @@ const { Content } = await render(project);
   /**
    * 复制按钮和大图遮罩都是这里运行时注入的 DOM，拿不到 Astro 的 scoped 属性，
    * 所以它们的样式在 global.css 的「正文增强」一节里，打印时也在那边隐藏。
+   * 接了 ClientRouter 后脚本只执行一次，换页靠 astro:page-load 重新初始化；
+   * WeakSet 认的是正文节点，换页后是新节点才会再跑一遍。
    */
-  const prose = document.querySelector<HTMLElement>('.prose');
+  const seen = new WeakSet<Element>();
 
-  if (prose) {
+  /* Esc 监听挂在 document 上，换页不会自己解绑，所以只注册一次，转调当前遮罩 */
+  let closeCurrent: (() => void) | null = null;
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeCurrent?.();
+  });
+
+  const setup = () => {
+    const prose = document.querySelector<HTMLElement>('.prose');
+    if (!prose) {
+      closeCurrent = null;
+      return;
+    }
+    if (seen.has(prose)) return;
+    seen.add(prose);
+
     if (navigator.clipboard) {
       for (const block of prose.querySelectorAll('pre')) {
         const wrap = document.createElement('div');
@@ -253,52 +317,71 @@ const { Content } = await render(project);
     }
 
     const images = [...prose.querySelectorAll<HTMLImageElement>('img')];
-    if (images.length > 0) {
-      const overlay = document.createElement('div');
-      overlay.className = 'lightbox';
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
-      overlay.setAttribute('aria-label', '查看图片大图');
-      overlay.hidden = true;
-      const big = document.createElement('img');
-      const close = document.createElement('button');
-      close.type = 'button';
-      close.className = 'lightbox__close';
-      close.textContent = '关闭（Esc）';
-      overlay.append(big, close);
-      document.body.append(overlay);
+    if (images.length === 0) {
+      closeCurrent = null;
+      return;
+    }
 
-      let opener: HTMLImageElement | null = null;
-      const show = (target: HTMLImageElement) => {
-        big.src = target.currentSrc || target.src;
-        big.alt = target.alt;
-        opener = target;
-        overlay.hidden = false;
-        document.body.classList.add('has-lightbox');
-        close.focus();
-      };
-      const hide = () => {
-        overlay.hidden = true;
-        document.body.classList.remove('has-lightbox');
-        opener?.focus();
-      };
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', '查看图片大图');
+    overlay.hidden = true;
+    const big = document.createElement('img');
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'lightbox__close';
+    close.textContent = '关闭（Esc）';
+    overlay.append(big, close);
+    document.body.append(overlay);
 
-      for (const image of images) {
-        image.classList.add('is-zoomable');
-        image.tabIndex = 0;
-        image.addEventListener('click', () => show(image));
-        image.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            show(image);
-          }
-        });
+    let opener: HTMLImageElement | null = null;
+    const show = (target: HTMLImageElement) => {
+      big.src = target.currentSrc || target.src;
+      big.alt = target.alt;
+      opener = target;
+      overlay.hidden = false;
+      document.body.classList.add('has-lightbox');
+      /* 让大图从被点小图的正中间长出来：把那个中心换算成大图盒子里的相对坐标。
+         getBoundingClientRect 强制同步布局，所以第一帧画出来时 origin 已经是对的 */
+      const from = target.getBoundingClientRect();
+      const box = big.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0) {
+        big.style.setProperty('--ox', `${from.left + from.width / 2 - box.left}px`);
+        big.style.setProperty('--oy', `${from.top + from.height / 2 - box.top}px`);
       }
+      close.focus();
+    };
+    const hide = () => {
+      overlay.hidden = true;
+      document.body.classList.remove('has-lightbox');
+      opener?.focus();
+    };
 
-      overlay.addEventListener('click', hide);
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !overlay.hidden) hide();
+    for (const image of images) {
+      image.classList.add('is-zoomable');
+      image.tabIndex = 0;
+      image.addEventListener('click', () => show(image));
+      image.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          show(image);
+        }
       });
     }
-  }
+
+    overlay.addEventListener('click', hide);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !overlay.hidden) hide();
+    });
+  };
+
+  /* 遮罩开着时被路由换页：正文换了，但 <body> 上的锁滚动标记不会自己掉 */
+  document.addEventListener('astro:before-swap', () => {
+    document.body.classList.remove('has-lightbox');
+  });
+
+  setup();
+  document.addEventListener('astro:page-load', setup);
 </script>

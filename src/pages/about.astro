@@ -6,46 +6,54 @@ import { site } from '../site.config';
 
 <Base title="关于 · 作品集" description={`${site.author}，${site.role}`}>
   <article>
-    <h1>关于我</h1>
-    <p class="muted">
+    <h1 class="mask-rise">关于我</h1>
+    <p class="muted rise" style="--i: 1">
       这段是占位文字，正文在本文件里改；姓名、社交链接、下面的技术栈和履历都来自
       <code>src/site.config.ts</code>。
     </p>
 
-    <h2>我在做什么</h2>
-    <p>一句话说清你的方向，例如「专注于数据可视化和前端工程化」。</p>
+    <section class="reveal">
+      <h2>我在做什么</h2>
+      <p>一句话说清你的方向，例如「专注于数据可视化和前端工程化」。</p>
+    </section>
 
-    <h2>技术栈</h2>
-    <ul class="tag-list">
-      {site.stack.map((item) => <li>{item}</li>)}
-    </ul>
+    <section class="reveal">
+      <h2>技术栈</h2>
+      <ul class="tag-list">
+        {site.stack.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
 
-    <h2>经历</h2>
-    <ul>
-      {
-        site.experience.map((item) => (
-          <li>
-            <span class="muted">{item.period}</span>　{item.entry}
-          </li>
-        ))
-      }
-    </ul>
+    <section class="reveal">
+      <h2>经历</h2>
+      <ul>
+        {
+          site.experience.map((item) => (
+            <li>
+              <span class="muted">{item.period}</span>　{item.entry}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
-    <h2>联系我</h2>
-    <p>
-      <EmailLink />
-      {
-        site.links.map(
-          (link) => (
-            <span>
-              {' · '}
-              <a href={link.href} rel="noopener noreferrer" target="_blank">
-                {link.label}
-              </a>
-            </span>
+    <section class="reveal">
+      <h2>联系我</h2>
+      <p>
+        <EmailLink />
+        {
+          site.links.map(
+            (link) => (
+              <span>
+                {' · '}
+                <a href={link.href} rel="noopener noreferrer" target="_blank">
+                  {link.label}
+                </a>
+              </span>
+            )
           )
-        )
-      }
-    </p>
+        }
+      </p>
+    </section>
   </article>
 </Base>
