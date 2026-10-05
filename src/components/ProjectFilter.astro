@@ -80,11 +80,18 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: 8px;
+    transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease),
+      background-color 0.2s var(--ease);
+  }
+
+  .filter-bar__search input:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
   }
 
   .filter-bar__search input:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+    background: var(--bg);
   }
 
   .filter-bar__status {
@@ -112,12 +119,17 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
     border: 1px solid var(--border);
     border-radius: 999px;
     cursor: pointer;
-    transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+    transition: color 0.2s var(--ease), border-color 0.2s var(--ease),
+      background-color 0.2s var(--ease), scale 0.12s var(--ease);
   }
 
   .chip:hover {
     color: var(--fg);
     border-color: var(--accent);
+  }
+
+  .chip:active {
+    scale: 0.95;
   }
 
   .chip[aria-pressed='true'] {
@@ -128,11 +140,23 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
 </style>
 
 <script>
-  const bar = document.querySelector<HTMLElement>('.filter-bar');
-  const grid = document.querySelector<HTMLElement>('.project-grid');
+  /* 监听挂在 window 上，换页不会自动解绑，所以只注册一次，转调当前页面的还原逻辑 */
+  let restoreOnPop: (() => void) | null = null;
+  window.addEventListener('popstate', () => restoreOnPop?.());
 
-  if (bar && grid) {
-    const cards = [...grid.querySelectorAll<HTMLElement>('.card')];
+  /** 挂了 ClientRouter 后这段脚本只跑一次，换页回来的筛选器要靠 astro:page-load 重新接线 */
+  const setup = () => {
+    const bar = document.querySelector<HTMLElement>('.filter-bar');
+    const grid = document.querySelector<HTMLElement>('.project-grid');
+
+    if (!bar || !grid) {
+      restoreOnPop = null;
+      return;
+    }
+    if (bar.dataset.ready === '1') return;
+    bar.dataset.ready = '1';
+
+    const shells = [...grid.querySelectorAll<HTMLElement>('.card-shell')];
     const input = bar.querySelector<HTMLInputElement>('input[type=search]')!;
     const chips = [...bar.querySelectorAll<HTMLButtonElement>('.chip')];
     const status = bar.querySelector<HTMLElement>('.filter-bar__status')!;
@@ -141,16 +165,16 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
     const apply = () => {
       const q = input.value.trim().toLowerCase();
       let shown = 0;
-      for (const card of cards) {
-        const tech = (card.dataset.tech ?? '').split('|');
+      for (const shell of shells) {
+        const tech = (shell.dataset.tech ?? '').split('|');
         const hitTag = !activeTag || tech.includes(activeTag);
-        const hitText = !q || (card.dataset.search ?? '').includes(q);
+        const hitText = !q || (shell.dataset.search ?? '').includes(q);
         const visible = hitTag && hitText;
-        card.hidden = !visible;
+        shell.hidden = !visible;
         if (visible) shown += 1;
       }
       status.textContent = shown
-        ? `显示 ${shown} / ${cards.length} 个作品`
+        ? `显示 ${shown} / ${shells.length} 个作品`
         : '没有匹配的作品，换个关键词试试';
     };
 
@@ -198,10 +222,26 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tech))].sort((a, b) =>
       sync();
     });
 
-    window.addEventListener('popstate', restore);
+    restoreOnPop = restore;
+
+    /* 作品数从 0 跑上去，reduced-motion 下直接留终值 */
+    const counter = document.querySelector<HTMLElement>('[data-count]');
+    if (counter && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const target = Number(counter.dataset.count);
+      const startedAt = performance.now();
+      const step = (now: number) => {
+        const p = Math.min((now - startedAt) / 550, 1);
+        counter.textContent = String(Math.round(target * (1 - (1 - p) ** 3)));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
 
     /* 筛选依赖 JS，没 JS 时这条整块保持隐藏，作品照常全部显示 */
     restore();
     bar.hidden = false;
-  }
+  };
+
+  setup();
+  document.addEventListener('astro:page-load', setup);
 </script>

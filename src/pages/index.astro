@@ -11,7 +11,7 @@ const projects = visibleProjects(await getCollection('projects'), import.meta.en
 
 <Base>
   <section class="hero">
-    <h1 class="rise">{site.author}</h1>
+    <h1 class="mask-rise">{site.author}</h1>
     <p class="rise" style="--i: 1">
       {site.role} — {site.tagline}
     </p>
@@ -23,7 +23,7 @@ const projects = visibleProjects(await getCollection('projects'), import.meta.en
   </section>
 
   <section id="projects">
-    <h2>作品（{projects.length}）</h2>
+    <h2>作品（<span data-count={String(projects.length)}>{projects.length}</span>）</h2>
     {projects.length > 1 && <ProjectFilter projects={projects} />}
     {
       projects.length > 0 ? (

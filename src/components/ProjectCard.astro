@@ -11,57 +11,89 @@ const { title, year, role, summary, tech, cover, draft } = project.data;
 const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 ---
 
-<article
-  class="card reveal"
+<div
+  class="card-shell"
   data-tech={tech.join('|')}
   data-search={`${title} ${summary} ${tech.join(' ')}`.toLowerCase()}
 >
-  {draft && <span class="card__draft">草稿</span>}
-  <div class="card__cover" style={`--hue: ${hue}`}>
-    {
-      cover ? (
-        /* 卡片最宽约 350px，出图按 2 倍给到 720px，多余的像素不落到访客机器上 */
-        <Image
-          src={cover}
-          alt={`${title} 截图`}
-          width={720}
-          loading="lazy"
-          decoding="async"
-        />
-      ) : (
-        <span class="card__initial" aria-hidden="true">
-          {title.slice(0, 1)}
-        </span>
-      )
-    }
-  </div>
-  <div class="card__body">
-    <h3 class="card__title">
-      <a href={`/projects/${project.id}`}>{title}</a>
-    </h3>
-    <p class="card__meta">
-      {year}
-      {role && ` · ${role}`}
-    </p>
-    <p class="card__summary">{summary}</p>
-    {
-      tech.length > 0 && (
-        <ul class="tag-list">
-          {tech.map((item) => (
-            <li>{item}</li>
-          ))}
-        </ul>
-      )
-    }
-  </div>
-</article>
+  <article class="card reveal">
+    {draft && <span class="card__draft">草稿</span>}
+    <div class="card__cover" style={`--hue: ${hue}`}>
+      {
+        cover ? (
+          /* 卡片最宽约 350px，出图按 2 倍给到 720px，多余的像素不落到访客机器上 */
+          <Image
+            src={cover}
+            alt={`${title} 截图`}
+            width={720}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <span class="card__initial" aria-hidden="true">
+            {title.slice(0, 1)}
+          </span>
+        )
+      }
+    </div>
+    <div class="card__body">
+      <h3 class="card__title">
+        <a href={`/projects/${project.id}`}>{title}</a>
+      </h3>
+      <p class="card__meta">
+        {year}
+        {role && ` · ${role}`}
+      </p>
+      <p class="card__summary">{summary}</p>
+      {
+        tech.length > 0 && (
+          <ul class="tag-list">
+            {tech.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        )
+      }
+      <span class="card__more" aria-hidden="true">查看案例 →</span>
+    </div>
+  </article>
+</div>
 
 <style>
+  /* 外壳负责筛选的显隐过渡，卡片本体负责滚动揭示。
+     两层都要动 opacity，放一个元素上会打起来：.reveal 的 fill:both
+     会盖掉筛选的 transition，卡片就变成硬切 */
+  .card-shell {
+    display: flex;
+  }
+
+  @supports (transition-behavior: allow-discrete) {
+    @media (prefers-reduced-motion: no-preference) {
+      .card-shell {
+        transition: opacity 0.26s var(--ease), scale 0.3s var(--ease),
+          display 0.3s allow-discrete;
+      }
+
+      .card-shell[hidden] {
+        opacity: 0;
+        scale: 0.95;
+      }
+
+      @starting-style {
+        .card-shell {
+          opacity: 0;
+          scale: 0.95;
+        }
+      }
+    }
+  }
+
   /* 卡片的 transform 交给 .reveal 动画，hover 只改阴影和封面缩放，
      否则动画的 fill:both 会一直占住 transform，hover 位移不生效 */
   .card {
     position: relative;
     display: flex;
+    flex: 1;
     flex-direction: column;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -70,7 +102,8 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
     transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
   }
 
-  .card:hover {
+  .card:hover,
+  .card:has(.card__title a:focus-visible) {
     border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
     box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.35);
   }
@@ -107,26 +140,52 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
     border-bottom: 1px solid var(--border);
   }
 
+  /* 缩放交给 scale、位移交给 translate：两个独立属性，滚动视差动画才不会
+     把 hover 的放大一起覆盖掉。基础放大 7% 是给 ±3% 位移留的边，
+     再多就要啃掉截图边缘的界面了 */
   .card__cover img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.45s var(--ease);
+    scale: 1.07;
+    transition: scale 0.45s var(--ease);
   }
 
   .card:hover .card__cover img {
-    transform: scale(1.04);
+    scale: 1.12;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .card__cover img {
+        animation-name: cover-pan;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: cover;
+      }
+
+      @keyframes cover-pan {
+        from {
+          translate: 0 3%;
+        }
+        to {
+          translate: 0 -3%;
+        }
+      }
+    }
   }
 
   .card__initial {
     font-size: 2.25rem;
     font-weight: 700;
     color: var(--fg-muted);
-    transition: transform 0.45s var(--ease);
+    transition: scale 0.45s var(--ease);
   }
 
   .card:hover .card__initial {
-    transform: scale(1.12);
+    scale: 1.12;
   }
 
   .card__body {
@@ -163,5 +222,30 @@ const hue = [...project.id].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
     margin: 0.2rem 0 0.5rem;
     font-size: 0.92rem;
     color: var(--fg-muted);
+  }
+
+  /* 提前告诉访客整张卡片能点；触屏没有 hover，直接常驻 */
+  .card__more {
+    margin-top: auto;
+    padding-top: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent);
+    opacity: 0;
+    translate: 0 0.3rem;
+    transition: opacity 0.25s var(--ease), translate 0.25s var(--ease);
+  }
+
+  .card:hover .card__more,
+  .card:has(.card__title a:focus-visible) .card__more {
+    opacity: 1;
+    translate: 0;
+  }
+
+  @media (hover: none) {
+    .card__more {
+      opacity: 1;
+      translate: 0;
+    }
   }
 </style>
