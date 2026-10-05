@@ -36,20 +36,30 @@
   }
 
   .icon {
+    /* 两个图标叠在同一个格子里换透明度，比 display 切换能做出旋转交接 */
+    grid-area: 1 / 1;
     width: 1.05rem;
     height: 1.05rem;
+    transition: opacity 0.3s var(--ease), rotate 0.5s var(--ease),
+      scale 0.3s var(--ease);
   }
 
   .icon--sun {
-    display: none;
-  }
-
-  :root[data-theme='dark'] .icon--sun {
-    display: block;
+    opacity: 0;
+    rotate: -90deg;
+    scale: 0.6;
   }
 
   :root[data-theme='dark'] .icon--moon {
-    display: none;
+    opacity: 0;
+    rotate: 90deg;
+    scale: 0.6;
+  }
+
+  :root[data-theme='dark'] .icon--sun {
+    opacity: 1;
+    rotate: 0deg;
+    scale: 1;
   }
 </style>
 
@@ -66,19 +76,60 @@
 
   const root = document.documentElement;
   const query = matchMedia('(prefers-color-scheme: dark)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
-  for (const button of document.querySelectorAll<HTMLButtonElement>('.theme-toggle')) {
-    button.addEventListener('click', () => {
-      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  const toggle = (button: HTMLButtonElement) => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    const rect = button.getBoundingClientRect();
+    /* 圆心取按钮中心，圆形擦除从按钮那个点铺开；clip 的坐标是视口像素 */
+    root.style.setProperty('--vt-x', `${rect.left + rect.width / 2}px`);
+    root.style.setProperty('--vt-y', `${rect.top + rect.height / 2}px`);
+
+    if (reduced.matches || !document.startViewTransition) {
       root.dataset.theme = next;
-      try {
-        localStorage.setItem(KEY, next);
-      } catch {
-        /* 隐私模式下写不进去，当场切换仍然生效 */
-      }
-      button.setAttribute('aria-label', next === 'dark' ? '切换到亮色主题' : '切换到深色主题');
-    });
-  }
+    } else {
+      /* 只在切主题这几帧挂着属性，平时摘掉，免得盖掉路由自己的页面过渡动画 */
+      root.dataset.themeVt = '';
+      const transition = document.startViewTransition(() => {
+        root.dataset.theme = next;
+      });
+      void transition.finished.finally(() => {
+        delete root.dataset.themeVt;
+      });
+    }
+
+    try {
+      localStorage.setItem(KEY, next);
+    } catch {
+      /* 隐私模式下写不进去，当场切换仍然生效 */
+    }
+    button.setAttribute('aria-label', next === 'dark' ? '切换到亮色主题' : '切换到深色主题');
+  };
+
+  /* 挂了 ClientRouter 之后脚本只执行一次，新页面的按钮要靠 page-load 重新绑定 */
+  const bind = () => {
+    for (const button of document.querySelectorAll<HTMLButtonElement>('.theme-toggle')) {
+      if (button.dataset.bound === '1') continue;
+      button.dataset.bound = '1';
+      button.addEventListener('click', () => toggle(button));
+    }
+  };
+
+  bind();
+  document.addEventListener('astro:page-load', bind);
+
+  /* 路由换页时 Astro 会用新页面的 <html> 属性覆盖当前文档的，
+     data-theme 是脚本写的，不在 SSR 输出里，会被整个抹掉变成亮色。
+     after-swap 还在同一帧里，赶在浏览器拍新快照之前补回来就不会闪。 */
+  document.addEventListener('astro:after-swap', () => {
+    const saved = stored();
+    root.dataset.theme =
+      saved === 'light' || saved === 'dark'
+        ? saved
+        : query.matches
+          ? 'dark'
+          : 'light';
+  });
 
   /* 没手动选过就跟着系统走 */
   query.addEventListener('change', (event) => {

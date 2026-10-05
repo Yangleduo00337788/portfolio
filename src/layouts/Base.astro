@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import { site } from '../site.config';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import EmailLink from '../components/EmailLink.astro';
@@ -58,10 +59,13 @@ const ogImage = new URL(image, Astro.site).href;
     <meta property="og:image:alt" content={title} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
+    <!-- 页面切换走 View Transitions；同页锚点要自己接管，见 body 末尾那段 -->
+    <ClientRouter />
   </head>
   <body>
     <a class="skip-link" href="#main">跳到主要内容</a>
-    <header class="site-header">
+    <!-- 页头每页都一样，persist 后切页不再参与整页 crossfade，省掉闪一下 -->
+    <header class="site-header" transition:persist="site-header">
       <div class="site-header__inner">
         <a class="site-logo" href="/">{site.author}</a>
         <nav class="site-nav" aria-label="主导航">
@@ -105,5 +109,55 @@ const ogImage = new URL(image, Astro.site).href;
         </ul>
       </div>
     </footer>
+
+    <script>
+      /**
+       * 路由判定同页只看 pathname + search，所以首页筛选写进 ?tag=&q= 之后，
+       * 再点「看作品 ↓」这类 #锚点 会被当成跨页导航重新拉一遍整页 —— 换回来的
+       * 是没带筛选的 HTML，刚选的条件当场被清空。这里在捕获阶段抢在路由前面，
+       * 只接管同路径的锚点：自己滚动、自己写 hash，筛选态和 smooth 滚动都保住。
+       */
+      document.addEventListener(
+        'click',
+        (event) => {
+          if (event.defaultPrevented || event.button !== 0) return;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+          const anchor = (event.target as Element | null)?.closest(
+            'a[href^="#"]',
+          ) as HTMLAnchorElement | null;
+          const raw = anchor?.getAttribute('href');
+          if (!anchor || !raw || raw === '#') return;
+
+          const target = document.getElementById(decodeURIComponent(raw.slice(1)));
+          if (!target) return;
+
+          event.preventDefault();
+          history.replaceState(
+            history.state,
+            '',
+            `${location.pathname}${location.search}${raw}`,
+          );
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          /* 跳转后要能把焦点落到目标上，读屏用户才跟得住 */
+          if (!target.matches('a, button, input, select, textarea, [tabindex]')) {
+            target.tabIndex = -1;
+          }
+          target.focus({ preventScroll: true });
+        },
+        true,
+      );
+
+      /* 页头挂了 transition:persist，换页时这个节点被搬过去而不是重建，
+         服务端算好的 aria-current 就停在上一页上，这里跟着地址重新标 */
+      const markCurrent = () => {
+        const path = location.pathname.replace(/\/+$/, '') || '/';
+        for (const link of document.querySelectorAll<HTMLAnchorElement>('.site-nav a')) {
+          if (link.pathname === path) link.setAttribute('aria-current', 'page');
+          else link.removeAttribute('aria-current');
+        }
+      };
+      document.addEventListener('astro:page-load', markCurrent);
+    </script>
   </body>
 </html>
