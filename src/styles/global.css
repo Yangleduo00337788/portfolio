@@ -213,6 +213,30 @@ main {
   padding: 3.5rem 1.5rem 5.5rem;
 }
 
+/* 页头随滚动收紧：只在开头 72px 内走完，之后保持紧凑态，
+   用 scroll() 时间线省下监听器，不支持的浏览器保持原样不缩 */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header__inner {
+      animation-name: header-tighten;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 72px;
+    }
+
+    @keyframes header-tighten {
+      from {
+        padding-block: 1rem;
+      }
+      to {
+        padding-block: 0.5rem;
+      }
+    }
+  }
+}
+
 /* ---------- 首屏 ---------- */
 
 .hero {
@@ -266,6 +290,14 @@ main {
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--fg-muted);
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease),
+    translate 0.2s var(--ease);
+}
+
+.tag-list li:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  translate: 0 -1px;
 }
 
 .inline-links {
@@ -307,6 +339,24 @@ main {
   }
 }
 
+/* 大标题用遮罩掀起，比整块淡入更像「排版」。上下左右各留 0.2em 余量，
+   免得把中文的标点和字形的上伸部分裁掉 */
+.mask-rise {
+  animation: mask-rise 0.75s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+@keyframes mask-rise {
+  from {
+    clip-path: inset(-0.2em -0.2em calc(100% + 0.2em) -0.2em);
+    transform: translate3d(0, 0.45em, 0);
+  }
+  to {
+    clip-path: inset(-0.2em -0.2em -0.2em -0.2em);
+    transform: none;
+  }
+}
+
 /* 滚动进入视口时揭示。不支持 animation-timeline 的浏览器整段跳过，
    元素保持默认可见，不会出现"内容永远不出现"的情况。
    区间终点锚在 cover 而不是 entry：比视口高的元素永远走不完 entry，
@@ -332,6 +382,41 @@ main {
       to {
         opacity: 1;
         transform: none;
+      }
+    }
+  }
+}
+
+/* 小节前的小横杠：滚动到视口里再抽出来 */
+main h2::before {
+  content: '';
+  display: inline-block;
+  width: 1.1rem;
+  height: 2px;
+  margin-right: 0.55rem;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main h2::before {
+      animation-name: line-grow;
+      animation-duration: auto;
+      animation-timing-function: var(--ease);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 55%;
+    }
+
+    @keyframes line-grow {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
       }
     }
   }
@@ -442,6 +527,50 @@ main {
 
 .is-zoomable {
   cursor: zoom-in;
+  transition: box-shadow 0.25s var(--ease);
+}
+
+.is-zoomable:hover {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.code-copy:active {
+  scale: 0.94;
+}
+
+/* ---------- 主题切换的圆形擦除 ---------- */
+
+/* 只在切换那一瞬挂 data-theme-vt，不然会把 ClientRouter 自己的
+   页面过渡动画一起关掉 */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme-vt]::view-transition-image-pair(root) {
+    isolation: isolate;
+  }
+
+  html[data-theme-vt]::view-transition-old(root),
+  html[data-theme-vt]::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* 旧画面留在下面不动，新画面从按钮那个点开出来盖上去 */
+  html[data-theme-vt]::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  html[data-theme-vt]::view-transition-new(root) {
+    z-index: 2;
+    animation: theme-circle 0.5s var(--ease) both;
+  }
+
+  @keyframes theme-circle {
+    from {
+      clip-path: circle(0 at var(--vt-x, 50vw) var(--vt-y, 50vh));
+    }
+    to {
+      clip-path: circle(150% at var(--vt-x, 50vw) var(--vt-y, 50vh));
+    }
+  }
 }
 
 body.has-lightbox {
@@ -465,6 +594,38 @@ body.has-lightbox {
   height: auto;
   border-radius: var(--radius);
   box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.6);
+  /* 展开时从被点的那张小图的位置长出来，origin 由脚本按点击点写进 px */
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+}
+
+/* 开关遮罩都有过渡：display 和 overlay 用 allow-discrete 延迟到动画结束，
+   否则淡出还没开始整个层就没了。不支持的浏览器维持瞬间开关 */
+@supports (transition-behavior: allow-discrete) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lightbox,
+    .lightbox img {
+      transition: opacity 0.24s var(--ease), scale 0.3s var(--ease),
+        display 0.3s allow-discrete;
+    }
+
+    .lightbox[hidden] {
+      opacity: 0;
+    }
+
+    .lightbox[hidden] img {
+      scale: 0.6;
+    }
+
+    @starting-style {
+      .lightbox {
+        opacity: 0;
+      }
+
+      .lightbox img {
+        scale: 0.6;
+      }
+    }
+  }
 }
 
 .lightbox__close {
@@ -508,6 +669,15 @@ body.has-lightbox {
   .lightbox,
   .print-trigger,
   .back {
+    display: none !important;
+  }
+
+  /* 纸上手势全废：小节的装饰横杠和「悬停才现身」的提示都不印 */
+  main h2::before {
+    content: none;
+  }
+
+  .card__more {
     display: none !important;
   }
 
