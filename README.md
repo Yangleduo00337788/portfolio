@@ -19,14 +19,14 @@ src/
 ├── content/projects/*.md       ← 每个作品一个文件
 ├── assets/images/              作品封面放这里（构建时压缩）
 ├── lib/projects.ts             作品列表开关（dev 含草稿）、排序与相关推荐
-├── layouts/Base.astro          页头、页脚、head 里的 meta、主题初始化脚本
+├── layouts/Base.astro          页头、页脚、head 里的 meta、主题初始化脚本、切页路由与同页锚点接管
 ├── components/
-│   ├── ProjectCard.astro       作品卡片
+│   ├── ProjectCard.astro       作品卡片，外壳 .card-shell 管筛选过渡，里面 .card 管滚动揭示
 │   ├── ProjectNav.astro        详情页的上下篇 + 同技术栈推荐
 │   ├── ProjectFilter.astro     首页标签筛选 / 关键词搜索
 │   ├── ThemeToggle.astro       深浅色切换按钮
 │   └── EmailLink.astro         页脚邮箱（源码里不出现连续地址）
-├── styles/global.css           设计变量（配色、圆角、宽度）与打印样式都在这
+├── styles/global.css           设计变量（配色、圆角、宽度）、全站动效与打印样式都在这
 └── pages/
     ├── index.astro             首页 = 作品网格 + 筛选条
     ├── projects/[id].astro     作品详情页，按文件名自动生成路由
@@ -81,6 +81,20 @@ draft: false                    # true 则不构建上线；本地 dev 仍能预
 - 代码块右上角有「复制」：鼠标移进代码块才出现，触屏一直显示
 - 正文里的图片可以点开看大图，点任意位置或按 Esc 关闭；Tab 聚焦到图片后回车也能打开
 - `draft: true` 的作品只在 `npm run dev` 里出现，卡片和详情页会标「草稿」，`npm run build` 不生成这一页
+
+## 动效
+
+首屏标题遮罩掀起、卡片滚动揭示、小节标题前那条横杠、页头随滚动收紧、卡片封面视差、详情页封面落定、大图遮罩从你点的那个位置展开，全是 CSS 写的，没引任何动效库。滚动驱动的那几条包在 `@supports (animation-timeline: view())` 和 `prefers-reduced-motion: no-preference` 里，浏览器不支持就是静态页面，不会出现「内容永远不出现」；系统开了减弱动画则整站动效一起关掉。打印时横杠和「悬停才现身」的提示都不印。
+
+作品筛选的淡入淡出挂在 `.card-shell` 上，滚动揭示挂在里面的 `.card` 上，分两层是因为两边都要动 `opacity`：写在一个元素上，揭示动画的 `fill: both` 会把筛选过渡吃掉，卡片就变回硬切。
+
+页面之间用 Astro 自带的 View Transitions（`<ClientRouter />`）做淡入淡出，切主题是从按钮那个位置铺一个圆出去，都没装额外依赖。接它踩到三个坑，改的时候别再改回去：
+
+- 换页时 Astro 会用新页面的 `<html>` 属性覆盖当前文档的，`data-theme` 是脚本写的，会被抹成亮色 —— `ThemeToggle.astro` 里挂在 `astro:after-swap` 上补回来，那一帧还没结束，不会闪
+- 模块脚本换页后不会重新执行（Astro 按 `textContent` 去重），所以筛选器、复制按钮/大图、主题按钮都是初始化函数 + 监听 `astro:page-load`，并且各自认自己的节点，重复调用不会绑两遍
+- 路由判断同页只看 `pathname + search`，筛选条件写进 `?tag=` 之后，再点「看作品 ↓」这类 `#锚点` 会被当成跨页导航重新拉一遍整页，刚筛的条件当场没了 —— `Base.astro` 末尾在捕获阶段接管同页锚点，自己滚动、自己写 hash
+
+页头挂了 `transition:persist` 不参与切页淡出，代价是这个节点不重建，服务端算好的导航高亮会停在上一页，所以 `Base.astro` 里 `markCurrent()` 跟着地址栏重标 `aria-current`。
 
 ## 简历
 
