@@ -14,10 +14,10 @@ const { prev, next, related = [] } = Astro.props;
 
 {
   (prev || next) && (
-    <nav class="pager" aria-label="作品间导航">
+    <nav class="pager reveal" aria-label="作品间导航">
       {
         prev && (
-          <a class="pager__link" rel="prev" href={`/projects/${prev.id}`}>
+          <a class="pager__link pager__link--prev" rel="prev" href={`/projects/${prev.id}`}>
             <span class="pager__label">← 上一篇</span>
             <span class="pager__title">{prev.data.title}</span>
           </a>
@@ -37,7 +37,7 @@ const { prev, next, related = [] } = Astro.props;
 
 {
   related.length > 0 && (
-    <section class="related">
+    <section class="related reveal">
       <h2>用过相同技术栈的作品</h2>
       <ul class="related__list">
         {related.map((item) => (
@@ -71,12 +71,27 @@ const { prev, next, related = [] } = Astro.props;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--fg);
-    transition: border-color 0.25s var(--ease);
+    transition: border-color 0.25s var(--ease), translate 0.25s var(--ease),
+      box-shadow 0.25s var(--ease), scale 0.12s var(--ease);
   }
 
   .pager__link:hover {
     text-decoration: none;
     border-color: var(--accent);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* 往各自的方向让一点，指向感比只变色明确 */
+  .pager__link--prev:hover {
+    translate: -3px 0;
+  }
+
+  .pager__link--next:hover {
+    translate: 3px 0;
+  }
+
+  .pager__link:active {
+    scale: 0.99;
   }
 
   .pager__link--next {
@@ -86,6 +101,11 @@ const { prev, next, related = [] } = Astro.props;
   .pager__label {
     font-size: 0.78rem;
     color: var(--fg-muted);
+    transition: color 0.2s var(--ease);
+  }
+
+  .pager__link:hover .pager__label {
+    color: var(--accent);
   }
 
   .pager__title {
@@ -110,5 +130,15 @@ const { prev, next, related = [] } = Astro.props;
     flex-wrap: wrap;
     gap: 0.5rem 1.25rem;
     font-size: 0.9rem;
+  }
+
+  .related__list a {
+    transition: color 0.2s var(--ease), translate 0.2s var(--ease);
+  }
+
+  .related__list a:hover {
+    color: var(--accent);
+    text-decoration: none;
+    translate: 2px 0;
   }
 </style>
