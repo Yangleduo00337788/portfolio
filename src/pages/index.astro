@@ -39,5 +39,51 @@ const projects = visibleProjects(await getCollection('projects'), import.meta.en
         </p>
       )
     }
+
+    {
+      projects.length > 0 && (
+        <div class="empty" hidden>
+          <p>没有符合条件的作品，换个标签或关键词试试。</p>
+          <button type="button" class="empty__reset" data-empty-reset>清空筛选</button>
+        </div>
+      )
+    }
   </section>
 </Base>
+
+<style>
+  /* 筛到零条时整个网格是空的，页面看着像坏了；给一个带出路的占位块 */
+  .empty {
+    margin-top: 1.75rem;
+    padding: 2.5rem 1.5rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--fg-muted);
+  }
+
+  .empty p {
+    margin: 0 0 1rem;
+    font-size: 0.92rem;
+  }
+
+  .empty__reset {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.42rem 0.9rem;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease), scale 0.12s var(--ease);
+  }
+
+  .empty__reset:hover {
+    border-color: var(--accent);
+  }
+
+  .empty__reset:active {
+    scale: 0.96;
+  }
+</style>
