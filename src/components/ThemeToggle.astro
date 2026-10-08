@@ -78,6 +78,27 @@
   const query = matchMedia('(prefers-color-scheme: dark)');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
+  const resolveTheme = (): string => {
+    const saved = stored();
+    return saved === 'light' || saved === 'dark'
+      ? saved
+      : query.matches
+        ? 'dark'
+        : 'light';
+  };
+
+  /* 手机浏览器的地址栏跟着页面底色，不写就等于深色页面顶着一根白条 */
+  const paintThemeColor = () => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    meta.setAttribute('content', getComputedStyle(document.body).backgroundColor);
+  };
+
+  const applyTheme = (next: string) => {
+    root.dataset.theme = next;
+    paintThemeColor();
+  };
+
   const toggle = (button: HTMLButtonElement) => {
     const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
     const rect = button.getBoundingClientRect();
@@ -86,12 +107,12 @@
     root.style.setProperty('--vt-y', `${rect.top + rect.height / 2}px`);
 
     if (reduced.matches || !document.startViewTransition) {
-      root.dataset.theme = next;
+      applyTheme(next);
     } else {
       /* 只在切主题这几帧挂着属性，平时摘掉，免得盖掉路由自己的页面过渡动画 */
       root.dataset.themeVt = '';
       const transition = document.startViewTransition(() => {
-        root.dataset.theme = next;
+        applyTheme(next);
       });
       void transition.finished.finally(() => {
         delete root.dataset.themeVt;
@@ -117,22 +138,18 @@
 
   bind();
   document.addEventListener('astro:page-load', bind);
+  paintThemeColor();
 
   /* 路由换页时 Astro 会用新页面的 <html> 属性覆盖当前文档的，
      data-theme 是脚本写的，不在 SSR 输出里，会被整个抹掉变成亮色。
-     after-swap 还在同一帧里，赶在浏览器拍新快照之前补回来就不会闪。 */
+     after-swap 还在同一帧里，赶在浏览器拍新快照之前补回来就不会闪。
+     head 同样是重建的，theme-color 得跟着重写，不然又变回写死的白条。 */
   document.addEventListener('astro:after-swap', () => {
-    const saved = stored();
-    root.dataset.theme =
-      saved === 'light' || saved === 'dark'
-        ? saved
-        : query.matches
-          ? 'dark'
-          : 'light';
+    applyTheme(resolveTheme());
   });
 
   /* 没手动选过就跟着系统走 */
   query.addEventListener('change', (event) => {
-    if (stored() === null) root.dataset.theme = event.matches ? 'dark' : 'light';
+    if (stored() === null) applyTheme(event.matches ? 'dark' : 'light');
   });
 </script>

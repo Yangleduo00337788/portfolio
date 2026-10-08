@@ -46,6 +46,8 @@ const ogImage = new URL(image, Astro.site).href;
       })();
     </script>
     <meta name="viewport" content="width=device-width" />
+    <!-- 手机浏览器地址栏/任务栏跟主题走，content 由 ThemeToggle 按当前底色改写 -->
+    <meta name="theme-color" content="#ffffff" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
@@ -138,7 +140,13 @@ const ogImage = new URL(image, Astro.site).href;
             '',
             `${location.pathname}${location.search}${raw}`,
           );
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          /* 减弱动画的偏好是硬要求，这里写死 smooth 会绕过全局的 scroll-behavior:auto */
+          target.scrollIntoView({
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches
+              ? 'auto'
+              : 'smooth',
+            block: 'start',
+          });
           /* 跳转后要能把焦点落到目标上，读屏用户才跟得住 */
           if (!target.matches('a, button, input, select, textarea, [tabindex]')) {
             target.tabIndex = -1;

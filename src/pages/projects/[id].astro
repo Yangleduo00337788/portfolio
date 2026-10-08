@@ -337,12 +337,26 @@ const { Content } = await render(project);
     document.body.append(overlay);
 
     let opener: HTMLImageElement | null = null;
+    /* 遮罩开着时 Tab 不该还能跑到后面的正文里：aria-modal 只是声明，
+       真正的围栏要靠给正文加 inert。脚本和路由播报节点除外。 */
+    const neighbours = () =>
+      [...document.body.children].filter(
+        (el) => el !== overlay && el.tagName !== 'SCRIPT' && !el.classList.contains('astro-route-announcer'),
+      );
+    const lock = (on: boolean) => {
+      for (const el of neighbours()) {
+        if (on) el.setAttribute('inert', '');
+        else el.removeAttribute('inert');
+      }
+    };
+
     const show = (target: HTMLImageElement) => {
       big.src = target.currentSrc || target.src;
       big.alt = target.alt;
       opener = target;
       overlay.hidden = false;
       document.body.classList.add('has-lightbox');
+      lock(true);
       /* 让大图从被点小图的正中间长出来：把那个中心换算成大图盒子里的相对坐标。
          getBoundingClientRect 强制同步布局，所以第一帧画出来时 origin 已经是对的 */
       const from = target.getBoundingClientRect();
@@ -356,6 +370,7 @@ const { Content } = await render(project);
     const hide = () => {
       overlay.hidden = true;
       document.body.classList.remove('has-lightbox');
+      lock(false);
       opener?.focus();
     };
 
@@ -377,9 +392,13 @@ const { Content } = await render(project);
     });
   };
 
-  /* 遮罩开着时被路由换页：正文换了，但 <body> 上的锁滚动标记不会自己掉 */
+  /* 遮罩开着时被路由换页：正文换了，但 <body> 上的锁滚动标记和挂在页头的 inert
+     不会自己掉——页头是 persist 节点，会被原样搬进新页面，带着 inert 就点不动了 */
   document.addEventListener('astro:before-swap', () => {
     document.body.classList.remove('has-lightbox');
+    for (const el of document.querySelectorAll('[inert]')) {
+      el.removeAttribute('inert');
+    }
   });
 
   setup();
